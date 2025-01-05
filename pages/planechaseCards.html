@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Planechase Game Deck (ALL Cards)</title>
+  <style>
+    #cardimage {
+  position: absolute;
+  height: 450px;
+  width: 600px;
+  left: 50%;
+  margin-left: -300px;
+  top: 20px;
+}
+#Planeswalk {
+  position: absolute;
+  background-color: "red";
+  top: 500px;
+  left: 50%;
+  width: 80px;
+  height: 20px;
+  margin-left: 100px;
+}
+#pastplanescontainer {
+  position: absolute;
+  width: 50px;
+  left: 20px;
+  height: 100%;
+  overflow: auto;
+}
+
+  </style>
+</head>
+<body>
+  <img src="#" id="cardimage"></img>
+  <button id="Planeswalk">Planeswalk</button>
+  <div id="pastplanescontainer"><p id="pastplanes"></p></div>
+
+  <script>
+var planes = [];
+var visitedplanes = [];
+var planepicture = document.getElementById("cardimage");
+var planeswalkbitton = document.getElementById("Planeswalk");
+var pastplanes = document.getElementById("pastplanes")
+function randomArray(arr) {
+  var selectedarr = Math.floor(Math.random()*arr.length);
+  return selectedarr;
+}
+
+function planeswalk() {
+  var plane = planes.splice(randomArray(planes), 1)[0];
+  planepicture.src = plane;
+  visitedplanes.push(plane);
+  updatevisitedplanes();
+}
+
+function updatevisitedplanes() {
+  var planesvisited = "";
+  visitedplanes.forEach((plane, i) => {
+    planesvisited += '<a href="'+plane+'" target="_blank">'+(i+1)+'</a> <br>'
+  });
+  pastplanes.innerHTML = planesvisited;
+}
+
+
+window.onload = function() {
+for (i=423582; i<=423667; i++) {
+  var thyplanetoadd = "https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + i + "&type=card";
+  planes.push(thyplanetoadd);
+}
+for (i=614930; i<=614954; i++) {
+  var thyplanetoadd = "https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + i + "&type=card";
+  planes.push(thyplanetoadd);
+}
+planeswalkbitton.addEventListener("click", planeswalk);
+}
+
+  </script>
+</body>
+</html>

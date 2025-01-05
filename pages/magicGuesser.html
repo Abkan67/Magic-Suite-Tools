@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Wordle</title>
+    <style>
+        body {
+            letter-spacing: 10px;
+            margin: 0px;
+            padding: 0px;
+        }
+        p, h2 {
+            letter-spacing: 5px;
+        }
+        #guesses {
+            letter-spacing: normal;
+        }
+        button {
+            height: 5%;
+        }
+        #guesses {
+            position: absolute; 
+            bottom: 0px; 
+            background-color: lightgray; 
+            width: calc(100% - 10px);
+            padding-left: 10px;
+            height: 40%;
+            overflow-y: auto;
+        }
+        #cardData {
+            position: absolute;
+            display: block;
+            width: calc(100% - 10px);
+            text-wrap-mode: wrap;
+            background-color: lightblue;
+            padding-left: 10px;
+            height: 65%;
+            overflow-y: auto;
+        }
+        #guessContainer {
+            position: absolute;
+            background-color: white;
+            top:0%;
+            display: none;
+            height: 5%;
+            width: calc(100% - 10px);
+            padding-left: 10px;
+
+        }
+        #guessContainer button {
+            position: absolute;
+            top: 0%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <button onclick = "startGame()">Start New Game</button> 
+    <button onclick="guessCard()">Guess</button>
+    <div id="guessContainer"><div id="guessBox" contenteditable="true"></div>
+        <button style="position: absolute; right: 5%;" onclick="checkCardGuess()">Submit Guess</button>
+    </div>
+    <div id="cardData">
+        <h1>
+            <span id="cardName"></span>
+            <span id="cardManaCost"></span>
+        </h1>
+        <h1 id="cardType"></h1>
+        <p id="cardTextBox"></p>
+        <p id="cardFlavorText" style="font-style: italic;"></p>
+        <h2 id="cardStats"></h2>
+        <h2 id="cardSet"></h2>
+        <br><br>
+    </div>
+    <div id="guesses"></div>
+
+    <script>
+
+    let data;
+    let guessNum = 1;
+    let guesses = "";
+    let gameState = "none";
+
+    async function getCard() {
+      try {
+          const response = await fetch("https://api.scryfall.com/cards/random?q=%28rarity%3Am%29+-type%3Aland+%28game%3Apaper%29+-is%3Adoublesided");
+          const data = await response.json();
+          return {
+            "name": setUpStringAsHiddenObject(data.name),
+            "cmc": setUpStringAsHiddenObject(data.mana_cost),
+            "type": setUpStringAsHiddenObject(data.type_line),
+            "textbox": setUpStringAsHiddenObject(data.oracle_text),
+            "flavor": data.flavor_text==undefined ? "" : setUpStringAsHiddenObject(data.flavor_text),
+            "stats": data.power != undefined ? (setUpStringAsHiddenObject(data.power + "/" + data.toughness)) :
+                (data.loyalty != undefined ? setUpStringAsHiddenObject(data.loyalty) : ""),
+            "set": setUpStringAsHiddenObject(data.set_name),
+          }
+      } catch (error) {
+        handleError(error);
+      }
+    }
+
+    function setUpStringAsHiddenObject(str) {
+        let toReturn = [];
+        for(const char of ""+str) {
+            toReturn.push({guessed:shouldStartRevealed(char), val: char});
+        }
+        return toReturn;
+    }
+    function shouldStartRevealed(char){return !("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".includes(char.toUpperCase()));}
+
+    function runGame() {
+        printCardInfo();
+    }
+
+    function printCardInfo() {
+        document.querySelector("#cardName").innerHTML = printConsiderHidden(data.name);
+        document.querySelector("#cardManaCost").innerHTML = printConsiderHidden(data.cmc);
+        document.querySelector("#cardType").innerHTML = printConsiderHidden(data.type);
+        document.querySelector("#cardTextBox").innerHTML = printConsiderHidden(data.textbox);
+        document.querySelector("#cardFlavorText").innerHTML = printConsiderHidden(data.flavor);
+        document.querySelector("#cardStats").innerHTML = printConsiderHidden(data.stats);
+        document.querySelector("#cardSet").innerHTML = printConsiderHidden(data.set);
+    }
+    
+    function printConsiderHidden(objectArray) {    
+        let toReturn = "";
+        for(let obj of objectArray) {
+            if(obj.val == "\n") {toReturn = toReturn + "<br>"}
+            else if(obj.guessed) {toReturn = toReturn+obj.val+"";}
+            else {toReturn = toReturn+"_"}
+        }
+        return toReturn;
+    }
+
+    function addGuess(guessKey) {
+        guesses += guessKey.toUpperCase();
+        document.querySelector("#guesses").innerHTML += `${guessNum++}. ${guessKey}<br>`;
+    }
+
+
+    function guessCard() {
+        if(gameState!="charGuess") return;
+        document.querySelector("#guessContainer").style.display = "block";
+        gameState = "cardGuess";
+    }
+
+    function checkCardGuess() {
+        gameState = "charGuess";
+        let cardName = "";
+        for(let obj of data["name"]) {cardName = cardName+obj.val;}
+        if(document.querySelector("#guessBox").innerHTML.toUpperCase()==cardName.toUpperCase()) {
+            
+            document.querySelector("#cardName").innerHTML = data.name.map( el => el.val).join("");
+            document.querySelector("#cardManaCost").innerHTML = data.cmc.map( el => el.val).join("");
+            document.querySelector("#cardType").innerHTML = data.type.map( el => el.val).join("");
+            document.querySelector("#cardTextBox").innerHTML = data.textbox.map( el => el.val).join("");
+            document.querySelector("#cardFlavorText").innerHTML = data.flavor.map( el => el.val).join("");
+            document.querySelector("#cardStats").innerHTML = data.stats.map( el => el.val).join("");
+            document.querySelector("#cardSet").innerHTML = data.set.map( el => el.val).join("");
+            gameState = "none";
+            
+        }
+        
+        document.querySelector("#guessContainer").style.display = "none";
+
+    }
+
+    document.addEventListener("keypress", handleKeyPress);
+
+    function handleKeyPress(e) {
+        if(gameState == "cardGuess" && e.key == "Enter") {checkCardGuess();}
+        if(gameState != "charGuess") return;
+        if(shouldStartRevealed(e.key)) return;
+        if(guesses.includes(e.key.toUpperCase())) return;
+        for(let cardProperties of Object.keys(data)) {
+            for(let obj of data[cardProperties]) {if(obj.val.toUpperCase()==e.key.toUpperCase()){obj.guessed=true;}}
+        }
+        addGuess(e.key);
+        runGame();
+    }
+    
+    
+    function startGame() {
+        document.querySelector("#guesses").innerHTML = "";
+        guessNum = 1;
+        guesses = "";
+        gameState = "charGuess";
+        getCard().then(result => {data = result; runGame(result);}).catch((err) => {handleError(err)});
+    }
+    
+    function handleError(err) {console.log(err);}
+
+    </script>
+</body>
+</html>
