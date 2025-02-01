@@ -4,9 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Abkan Magic Tools</title>
+    <style>
+        .project {
+            border: 2px solid black;
+            width: 80%;
+            position: relative;
+            left: 10%;
+            height: 80px;
+            margin-top: 15px;
+            text-decoration: none;
+            color: black;
+        }
+        a {
+            text-decoration: none;
+        }
+        .project:hover {
+            transform: translate(5px, -5px);
+            box-shadow: rgba(0,0,0,0.2) -2px 3px;
+        }
+        h1, p {
+            text-align: center;
+            color: white;
+        }
+        body {
+            background-color: gray;
+        }
+    </style>
 </head>
 <body>
-    <a href="pages/magicGuesser.html">Magic Wordle</a>
-    <a href="pages/planechaseCards.html">Planechase Cards</a>
+    <h1>Magic Suite Tools</h1>
+    <p>A few of my projects that revolve around the card game Magic: The Gathering</p>
+    <a href="pages/planechaseCards.html"><div class="project" style = "background-color: lightyellow;">Planechase - Contains all Magic Planechase cards for those who want to play the format.</div></a>
+    <a href="pages/magicGuesser.html"><div class="project" style = "background-color: lightblue;">Magic Guesser - Play a hangman-like game and try to guess the rare or mythic rare magic card from a number of letters.</div></a>
 </body>
 </html>
