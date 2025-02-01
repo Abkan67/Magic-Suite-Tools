@@ -4,23 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Planechase Game Deck (ALL Cards)</title>
+  <title>Planechase Game Deck</title>
   <style>
-    #cardimage {
+body {
+  padding: 0%;
+  margin: 0%;
+}
+#cardimage {
   position: absolute;
-  height: 450px;
-  width: 600px;
+  height: 600px;
+  width: 450px;
   left: 50%;
   margin-left: -300px;
-  top: 20px;
+  top: -40px;
+  transform: rotate(90deg);
 }
 #Planeswalk {
   position: absolute;
   background-color: "red";
   top: 500px;
   left: 50%;
-  width: 80px;
-  height: 20px;
+  width: 160px;
+  height: 50px;
   margin-left: 100px;
 }
 #pastplanescontainer {
@@ -30,19 +35,70 @@
   height: 100%;
   overflow: auto;
 }
+#openingPage {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0%;
+  height: 100%;
+  width: 100%;
+  background-color: blue ;
+}
+#cardlistContainer {
+  width: 60%;
+  height: 100%;
+  background-color: lightgreen;
+}
+#cardlist {
+  position: absolute;
+  display: block;
+  width: 60%;
+  font-size: 8px;
+  height: 80%;
+  bottom: 0%;
+  overflow-y: auto;
+}
+#sets {
+  position: absolute;
+  background-color: lightgray;
+  right: 0px;
+  width: 40%;
+  top: 0px;
+  height: 100%;
+  padding: 0%;
+  margin: 0%;
+}
+.setSelector {
+  height: 50px;
+  background-color: green;
+}
 
   </style>
 </head>
 <body>
-  <img src="#" id="cardimage"></img>
-  <button id="Planeswalk">Planeswalk</button>
-  <div id="pastplanescontainer"><p id="pastplanes"></p></div>
+  <div id="openingPage"> 
+    <div id="cardlistContainer">
+      <div id="cardlistTitle" style = "font-size: large;">Planar Deck <button onclick = "startGame()">Start Game</button> </div>
+      <div id="cardlist" contenteditable="true"></div>
+    </div>
+    <div id="sets">
+      All Planechase Sets <button id="updateDeckListFromSetsButton" onclick="updateDeckFromSets()">Update Deck</button>
+      <br> <span style = "font-size: smaller;">Click sets to add or remove them.</span>
+    </div>
+  </div>
+
+
+  <div id="gameView" style="display: none;"> 
+    <img src="#" id="cardimage"></img>
+    <button id="Planeswalk" onclick="planeswalk()">Planeswalk</button>
+    <div id="pastplanescontainer"><p id="pastplanes"></p></div>
+  </div>
 
   <script>
-var planes = [];
+var planes;
 var visitedplanes = [];
 var planepicture = document.getElementById("cardimage");
-var planeswalkbitton = document.getElementById("Planeswalk");
+var planeswalkbutton = document.getElementById("Planeswalk");
 var pastplanes = document.getElementById("pastplanes")
 function randomArray(arr) {
   var selectedarr = Math.floor(Math.random()*arr.length);
@@ -50,10 +106,22 @@ function randomArray(arr) {
 }
 
 function planeswalk() {
-  var plane = planes.splice(randomArray(planes), 1)[0];
+  var plane;
+  do {
+    plane = findPlaneImage(planes.splice(randomArray(planes), 1)[0]);  
+  } while (false);
+  console.log(plane)
   planepicture.src = plane;
   visitedplanes.push(plane);
   updatevisitedplanes();
+}
+
+function findPlaneImage(planeName) {
+  console.log(planeName)
+  for(let plane in planesData.data) {
+    if(planesData.data[plane].name == planeName) return planesData.data[plane].image_uris.large;
+  }
+  return false;
 }
 
 function updatevisitedplanes() {
@@ -64,18 +132,79 @@ function updatevisitedplanes() {
   pastplanes.innerHTML = planesvisited;
 }
 
+function startGame() {
+  planes = document.getElementById("cardlist").innerText.split("\n");
+  document.getElementById("openingPage").style.display = "none";
+  document.getElementById("gameView").style.display = "block";
+}
 
-window.onload = function() {
-for (i=423582; i<=423667; i++) {
-  var thyplanetoadd = "https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + i + "&type=card";
-  planes.push(thyplanetoadd);
+
+
+
+
+
+let planesData;
+let planesDeck;
+let sets = {};
+
+async function loadPlanes() {
+  try {
+    const response = await fetch("https://api.scryfall.com/cards/search?q=type%3Aplane+%28game%3Apaper%29");
+    planesData = await response.json();
+    
+  } catch(error) {
+    handleError(error);
+  }
 }
-for (i=614930; i<=614954; i++) {
-  var thyplanetoadd = "https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + i + "&type=card";
-  planes.push(thyplanetoadd);
+
+async function setup() {
+  await loadPlanes();
+  planesDeck = planesData.data.map((card) => {return card.name;});
+  updateSetsFromDeck();
+  updateDeckFromSets();
 }
-planeswalkbitton.addEventListener("click", planeswalk);
+
+function updateDeckFromSets() {
+  document.getElementById("cardlist").innerHTML = "";
+  for(plane in planesData.data) {
+    if(sets[planesData.data[plane].set]) {
+      document.getElementById("cardlist").innerText += planesData.data[plane].name+ "\n";
+    }
+  }
+
 }
+
+function updateSetsFromDeck() {
+  for(let card in planesData.data) {
+    let set = planesData.data[card].set;
+    if(!sets[set]) {
+      sets[set] = true;
+      addSetToSelector(set)
+    }
+  }
+
+}
+
+function addSetToSelector(setName) {
+  const setSelector = document.createElement("div");
+  setSelector.setAttribute("class", "setSelector");
+  document.getElementById("sets").appendChild(setSelector);
+  setSelector.innerText = setName;
+  setSelector.onclick = () => {changeSetParody(setSelector)};
+}
+
+function changeSetParody(setSelector) {
+  if(sets[setSelector.innerText]) {
+    sets[setSelector.innerText] = false;
+    setSelector.style.backgroundColor = "grey";
+  } else {
+    sets[setSelector.innerText] = true;
+    setSelector.style.backgroundColor = "green";
+  }
+}
+
+function handleError(error) {console.log(error);}
+window.addEventListener("load", setup);
 
   </script>
 </body>

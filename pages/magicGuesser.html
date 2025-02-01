@@ -10,8 +10,13 @@
             margin: 0px;
             padding: 0px;
         }
+        p::selection, h1::selection, h2::selection {
+            color: black;
+            background-color: blue;
+        }
         p, h2 {
             letter-spacing: 5px;
+            font-size: 26px;
         }
         #guesses {
             letter-spacing: normal;
@@ -37,6 +42,7 @@
             padding-left: 10px;
             height: 65%;
             overflow-y: auto;
+            font-size: 18px;
         }
         #guessContainer {
             position: absolute;
@@ -52,6 +58,8 @@
             position: absolute;
             top: 0%;
             height: 100%;
+            font-size: 12px;
+            letter-spacing: normal;
         }
     </style>
 </head>
@@ -91,9 +99,9 @@
             "cmc": setUpStringAsHiddenObject(data.mana_cost),
             "type": setUpStringAsHiddenObject(data.type_line),
             "textbox": setUpStringAsHiddenObject(data.oracle_text),
-            "flavor": data.flavor_text==undefined ? "" : setUpStringAsHiddenObject(data.flavor_text),
+            "flavor": data.flavor_text==undefined ? [{guess: true, val: ""}] : setUpStringAsHiddenObject(data.flavor_text),
             "stats": data.power != undefined ? (setUpStringAsHiddenObject(data.power + "/" + data.toughness)) :
-                (data.loyalty != undefined ? setUpStringAsHiddenObject(data.loyalty) : ""),
+                (data.loyalty != undefined ? setUpStringAsHiddenObject(data.loyalty) : [{guess: true, val: ""}]),
             "set": setUpStringAsHiddenObject(data.set_name),
           }
       } catch (error) {
@@ -150,7 +158,7 @@
         gameState = "charGuess";
         let cardName = "";
         for(let obj of data["name"]) {cardName = cardName+obj.val;}
-        if(document.querySelector("#guessBox").innerHTML.toUpperCase()==cardName.toUpperCase()) {
+        if(document.querySelector("#guessBox").innerText.toUpperCase()==cardName.toUpperCase()) {
             
             document.querySelector("#cardName").innerHTML = data.name.map( el => el.val).join("");
             document.querySelector("#cardManaCost").innerHTML = data.cmc.map( el => el.val).join("");
